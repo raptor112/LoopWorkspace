@@ -312,6 +312,10 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
 
       # Upload to TestFlight
+
+      - name: update
+        run: bundle update fastlane
+        
       - name: Fastlane upload to TestFlight
         run: bundle exec fastlane release
         env:
