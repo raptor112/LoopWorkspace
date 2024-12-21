@@ -184,21 +184,34 @@ jobs:
 
   # Builds Loop
   build:
-    name: Build
-    needs: [validate, check_alive_and_permissions, check_latest_from_upstream]
-    runs-on: macos-14
-    permissions:
-      contents: write
-    if:
-      | # runs if started manually, or if sync schedule is set and enabled and scheduled on the first Saturday each month, or if sync schedule is set and enabled and new commits were found
-      github.event_name == 'workflow_dispatch' ||
-      (needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
-        (vars.SCHEDULED_BUILD != 'false' && github.event.schedule == '0 6 1 * *') ||
-        (vars.SCHEDULED_SYNC != 'false' && needs.check_latest_from_upstream.outputs.NEW_COMMITS == 'true' )
-      )
+    name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
     steps:
-      - name: Select Xcode version
-        run: "sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer"
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set Xcode Version
+      run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+    - name: Install Dependencies
+      run: |
+        brew install cocoapods
+        pod install
+
+    - name: Build Project
+      run: xcodebuild -workspace YourProject.xcworkspace -scheme YourSchemeName
 
       - name: Checkout Repo for syncing
         if: |
