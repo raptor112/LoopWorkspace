@@ -277,11 +277,6 @@ jobs:
           # Several patches may be added per submodule.
           # Adding comments (#) may be useful to easily tell the individual patches apart.
           
-          echo "Downloading code to support Dana pump"
-          git clone --branch=dev https://github.com/bastiaanv/DanaKit
-          echo "Applying customization to add Dana support to Loop"
-          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
-          
       # Patch Fastlane Match to not print tables
       - name: Patch Match Tables
         run: |
@@ -300,6 +295,11 @@ jobs:
       # Sync the GitHub runner clock with the Windows time server (workaround as suggested in https://github.com/actions/runner/issues/2996)
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
+
+          echo "Downloading code to support Dana pump"
+          git clone --branch=dev https://github.com/bastiaanv/DanaKit
+          echo "Applying customization to add Dana support to Loop"
+          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
 
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
