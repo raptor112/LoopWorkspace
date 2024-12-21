@@ -41,6 +41,7 @@ jobs:
           TOKEN_TO_CHECK: ${{ secrets.GH_PAT }}
         run: |
           PERMISSIONS=$(curl -sS -f -I -H "Authorization: token ${{ env.TOKEN_TO_CHECK }}" https://api.github.com | grep ^x-oauth-scopes: | cut -d' ' -f2-);
+
           if [[ $PERMISSIONS =~ "workflow" || $PERMISSIONS == "" ]]; then
             echo "GH_PAT holds workflow permissions or is fine-grained PAT."
             echo "has_permission=true" >> $GITHUB_OUTPUT # Set WORKFLOW_PERMISSION to false.
@@ -49,6 +50,7 @@ jobs:
             echo "Automated build features will be skipped!"
             echo "has_permission=false" >> $GITHUB_OUTPUT # Set WORKFLOW_PERMISSION to false.
           fi
+
       - name: Check for alive branches
         if: steps.workflow-permission.outputs.has_permission == 'true'
         env:
@@ -61,6 +63,7 @@ jobs:
             echo "Branches 'alive-main' and 'alive-dev' do not exist."
             echo "ALIVE_BRANCH_EXISTS=false" >> $GITHUB_ENV
           fi
+
       - name: Create alive branches
         if: env.ALIVE_BRANCH_EXISTS == 'false'
         env:
@@ -68,8 +71,10 @@ jobs:
         run: |
           # Get ref for LoopKit/LoopWorkspace:main
           SHA_MAIN=$(curl -sS -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/${{ env.UPSTREAM_REPO }}/git/refs/heads/main | jq -r '.object.sha')
+
           # Get ref for LoopKit/LoopWorkspace:dev
           SHA_DEV=$(curl -sS -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/${{ env.UPSTREAM_REPO }}/git/refs/heads/dev | jq -r '.object.sha')
+
           # Create alive-main branch based on LoopKit/LoopWorkspace:main
           gh api \
             --method POST \
@@ -78,6 +83,7 @@ jobs:
             /repos/${{ github.repository_owner }}/LoopWorkspace/git/refs \
             -f ref='refs/heads/alive-main' \
             -f sha=$SHA_MAIN
+
           # Create alive-dev branch based on LoopKit/LoopWorkspace:dev
           gh api \
             --method POST \
@@ -86,6 +92,7 @@ jobs:
             /repos/${{ github.repository_owner }}/LoopWorkspace/git/refs \
             -f ref='refs/heads/alive-dev' \
             -f sha=$SHA_DEV
+
   # Checks for changes in upstream repository; if changes exist prompts sync for build
   # Performs keepalive to avoid stale fork
   check_latest_from_upstream:
@@ -115,6 +122,7 @@ jobs:
             echo "Not running on main or dev branch"
             echo "ABORT_SYNC=true" >> $GITHUB_OUTPUT
           fi
+
       - name: Checkout target repo
         if: |
           needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
@@ -155,6 +163,7 @@ jobs:
         run: |
           echo ${{ steps.sync.outputs.has_new_commits }}
           echo "NEW_COMMITS=${{ steps.sync.outputs.has_new_commits }}" >> $GITHUB_OUTPUT
+
       # Keep repository "alive": add empty commits to ALIVE_BRANCH after "time_elapsed" days of inactivity to avoid inactivation of scheduled workflows
       - name: Keep alive
         if: |
@@ -172,11 +181,12 @@ jobs:
           echo "Synchronizing your fork of <code>LoopWorkspace</code> with the upstream repository <code>LoopKit/LoopWorkspace</code> will be skipped." >> $GITHUB_STEP_SUMMARY
           echo "If you want to enable automatic builds and updates for your Loop, please follow the instructions \
                 under the following path <code>LoopWorkspace/fastlane/testflight.md</code>." >> $GITHUB_STEP_SUMMARY
+
   # Builds Loop
   build:
     name: Build
     needs: [validate, check_alive_and_permissions, check_latest_from_upstream]
-    runs-on: macos-latest
+    runs-on: macos-14
     permissions:
       contents: write
     if:
@@ -188,7 +198,7 @@ jobs:
       )
     steps:
       - name: Select Xcode version
-        run: "sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer"
+        run: "sudo xcode-select --switch /Applications/Xcode_15.4.app/Contents/Developer"
 
       - name: Checkout Repo for syncing
         if: |
@@ -198,11 +208,11 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           ref: ${{ env.TARGET_BRANCH }}
-     
+
       - name: Sync upstream changes
         if: | # do not run the upstream sync action on the upstream repository
           needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
-          vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit'
+          vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit' && needs.check_latest_from_upstream.outputs.ABORT_SYNC == 'false'
         id: sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
@@ -232,6 +242,7 @@ jobs:
         run: |
           echo ${{ steps.sync.outputs.has_new_commits }}
           echo "NEW_COMMITS=${{ steps.sync.outputs.has_new_commits }}" >> $GITHUB_OUTPUT
+
       - name: Checkout Repo for building
         uses: actions/checkout@v4
         with:
@@ -242,24 +253,34 @@ jobs:
       # Customize Loop: Download and apply patches
       - name: Customize Loop
         run: |
+
           # LoopWorkspace patches
           # -applies any patches located in the LoopWorkspace/patches/ directory
           if $(ls ./patches/* &> /dev/null); then
           git apply ./patches/* --allow-empty -v --whitespace=fix
           fi
+
           # Submodule Loop patches:
           # Template for customizing submodule Loop (changes Loop app name to "CustomLoop")
           # Remove the "#" sign from the beginning of the line below to activate:
           #curl https://github.com/loopnlearn/Loop/commit/d206432b024279ef710df462b20bd464cd9682d4.patch | git apply --directory=Loop -v --whitespace=fix
+
           # Submodule LoopKit patches:
           # General template for customizing submodule LoopKit 
           # Copy url from a GitHub commit or pull request and insert below, and remove the "#" sign from the beginning of the line to activate:
           #curl url_to_github_commit.patch | git apply --directory=LoopKit -v --whitespace=fix
+
           # Submodule xxxxx patches:
+
           # Add patches for customization of additional submodules by following the templates above, 
           # and make sure to specify the submodule by setting "--directory=(submodule_name)".
           # Several patches may be added per submodule.
           # Adding comments (#) may be useful to easily tell the individual patches apart.
+          echo "Downloading code to support Dana pump"
+          git clone --branch=dev https://github.com/bastiaanv/DanaKit
+          echo "Applying customization to add Dana support to Loop"
+          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
+          
       # Patch Fastlane Match to not print tables
       - name: Patch Match Tables
         run: |
@@ -270,6 +291,7 @@ jobs:
             echo "table_printer.rb not found"
             exit 1
           fi
+
       # Install project dependencies
       - name: Install Project Dependencies
         run: bundle install
@@ -277,24 +299,6 @@ jobs:
       # Sync the GitHub runner clock with the Windows time server (workaround as suggested in https://github.com/actions/runner/issues/2996)
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
-
-      - name: Add Dana pump support
-        run: |
-          echo "Downloading code to support Dana pump"
-          git clone --branch=dev https://github.com/bastiaanv/DanaKit
-          echo "Applying customization to add Dana support to Loop"
-          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
-
-      - name: Downgrade Object Version
-        run: |
-             PROJECT_FILE="DanaKit/DanaKit.xcodeproj/project.pbxproj"
-             if [[ -f "$PROJECT_FILE" ]]; then
-             sed -i '' 's/objectVersion = [0-9]\{2,\};/objectVersion = 55;/g' "$PROJECT_FILE"
-             echo "Updated objectVersion to 69 in $PROJECT_FILE"
-             else
-             echo "Error: $PROJECT_FILE not found!"
-             exit 1
-             fi
 
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
