@@ -205,14 +205,6 @@ jobs:
     - name: Set Xcode Version
       run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 
-    - name: Install Dependencies
-      run: |
-        brew install cocoapods
-        pod install
-        
-    - name: Build Project
-      run: xcodebuild -workspace YourProject.xcworkspace -scheme YourSchemeName
-
       - name: Checkout Repo for syncing
         if: |
           needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
