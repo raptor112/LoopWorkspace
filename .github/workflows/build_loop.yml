@@ -268,7 +268,8 @@ jobs:
           # Submodule LoopKit patches:
           # General template for customizing submodule LoopKit 
           # Copy url from a GitHub commit or pull request and insert below, and remove the "#" sign from the beginning of the line to activate:
-          #curl url_to_github_commit.patch | git apply --directory=LoopKit -v --whitespace=fix
+          echo "Applying customization to add Dana support to Loop"
+          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
 
           # Submodule xxxxx patches:
 
@@ -276,11 +277,7 @@ jobs:
           # and make sure to specify the submodule by setting "--directory=(submodule_name)".
           # Several patches may be added per submodule.
           # Adding comments (#) may be useful to easily tell the individual patches apart.
-          
-          echo "Downloading code to support Dana pump"
-          git clone --branch=dev https://github.com/bastiaanv/DanaKit
-          echo "Applying customization to add Dana support to Loop"
-          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
+        
           
       # Patch Fastlane Match to not print tables
       - name: Patch Match Tables
