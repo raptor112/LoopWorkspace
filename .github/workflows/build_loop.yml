@@ -296,6 +296,7 @@ jobs:
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
 
+      - name: Dana 
           echo "Downloading code to support Dana pump"
           git clone --branch=dev https://github.com/bastiaanv/DanaKit
           echo "Applying customization to add Dana support to Loop"
