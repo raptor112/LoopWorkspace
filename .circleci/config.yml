@@ -1,7 +1,7 @@
 jobs:
   build_and_test:
     macos:
-      xcode: 15.4.0
+      xcode: 16.2.0
     steps:
       - checkout
       - run:
