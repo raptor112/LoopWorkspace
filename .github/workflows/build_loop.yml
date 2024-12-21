@@ -197,11 +197,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
+    
     - name: Set Xcode Version
       run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 
