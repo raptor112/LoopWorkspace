@@ -289,7 +289,7 @@ jobs:
         run: |
              PROJECT_FILE="DanaKit/DanaKit.xcodeproj/project.pbxproj"
              if [[ -f "$PROJECT_FILE" ]]; then
-             sed -i '' 's/objectVersion = [0-9]\{2,\};/objectVersion = 69;/g' "$PROJECT_FILE"
+             sed -i '' 's/objectVersion = [0-9]\{2,\};/objectVersion = 55;/g' "$PROJECT_FILE"
              echo "Updated objectVersion to 69 in $PROJECT_FILE"
              else
              echo "Error: $PROJECT_FILE not found!"
