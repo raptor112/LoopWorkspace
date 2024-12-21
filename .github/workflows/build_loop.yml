@@ -208,11 +208,11 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           ref: ${{ env.TARGET_BRANCH }}
-
+     
       - name: Sync upstream changes
         if: | # do not run the upstream sync action on the upstream repository
           needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
-          vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit' && needs.check_latest_from_upstream.outputs.ABORT_SYNC == 'false'
+          vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit'
         id: sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
@@ -263,14 +263,12 @@ jobs:
           # Submodule Loop patches:
           # Template for customizing submodule Loop (changes Loop app name to "CustomLoop")
           # Remove the "#" sign from the beginning of the line below to activate:
-          # curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply -v --whitespace=fix
+          #curl https://github.com/loopnlearn/Loop/commit/d206432b024279ef710df462b20bd464cd9682d4.patch | git apply --directory=Loop -v --whitespace=fix
 
           # Submodule LoopKit patches:
           # General template for customizing submodule LoopKit 
           # Copy url from a GitHub commit or pull request and insert below, and remove the "#" sign from the beginning of the line to activate:
-          echo "Downloading code to support Dana pump"
-          git clone https://github.com/bastiaanv/DanaKit
-          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply -v --whitespace=fix
+          #curl url_to_github_commit.patch | git apply --directory=LoopKit -v --whitespace=fix
 
           # Submodule xxxxx patches:
 
@@ -278,9 +276,7 @@ jobs:
           # and make sure to specify the submodule by setting "--directory=(submodule_name)".
           # Several patches may be added per submodule.
           # Adding comments (#) may be useful to easily tell the individual patches apart.
-          
 
-          
       # Patch Fastlane Match to not print tables
       - name: Patch Match Tables
         run: |
@@ -299,6 +295,13 @@ jobs:
       # Sync the GitHub runner clock with the Windows time server (workaround as suggested in https://github.com/actions/runner/issues/2996)
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
+
+      - name: Add Dana pump support
+        run: |
+          echo "Downloading code to support Dana pump"
+          git clone --branch=dev https://github.com/bastiaanv/DanaKit
+          echo "Applying customization to add Dana support to Loop"
+          curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
 
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
