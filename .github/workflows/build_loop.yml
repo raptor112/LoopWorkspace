@@ -287,10 +287,14 @@ jobs:
 
       - name: Downgrade Object Version
         run: |
-              # Find and replace the objectVersion in the project file
-              sed -i '' 's/objectVersion = 70;/objectVersion = 55;/g' DanaKit/DanaKit.xcodeproj/project.pbxproj
-              # Optional: Verify the change
-              grep "objectVersion" DanaKit/DanaKit.xcodeproj/project.pbxproj
+             PROJECT_FILE="DanaKit/DanaKit.xcodeproj/project.pbxproj"
+             if [[ -f "$PROJECT_FILE" ]]; then
+             sed -i '' 's/objectVersion = [0-9]\{2,\};/objectVersion = 69;/g' "$PROJECT_FILE"
+             echo "Updated objectVersion to 69 in $PROJECT_FILE"
+             else
+             echo "Error: $PROJECT_FILE not found!"
+             exit 1
+             fi
 
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
