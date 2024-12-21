@@ -269,7 +269,7 @@ jobs:
           # General template for customizing submodule LoopKit 
           # Copy url from a GitHub commit or pull request and insert below, and remove the "#" sign from the beginning of the line to activate:
           echo "Downloading code to support Dana pump"
-          git clone https://github.com/bastiaanv/DanaKit/tree/3fa546c50ae15f00e94e6b2f5662524a52b78e3f
+          git clone https://github.com/bastiaanv/DanaKit
           curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply -v --whitespace=fix
 
           # Submodule xxxxx patches:
