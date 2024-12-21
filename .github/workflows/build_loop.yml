@@ -284,6 +284,14 @@ jobs:
           git clone --branch=dev https://github.com/bastiaanv/DanaKit
           echo "Applying customization to add Dana support to Loop"
           curl https://github.com/loopandlearn/LoopWorkspace/commit/155d2e4a89ab5e7e6b423c67f8c0ccb132517ca4.patch | git apply
+
+      - name: Downgrade Object Version
+        run: |
+              # Find and replace the objectVersion in the project file
+              sed -i '' 's/objectVersion = 70;/objectVersion = 55;/g' DanaKit/DanaKit.xcodeproj/project.pbxproj
+              # Optional: Verify the change
+              grep "objectVersion" DanaKit/DanaKit.xcodeproj/project.pbxproj
+
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
         run: bundle exec fastlane build_loop
